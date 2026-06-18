@@ -1,5 +1,0 @@
-# [hooks]
-# enter = "gh auth switch --hostname github.com --user Michael-Goodness_mlb"
-
-[tools]
-terraform = "latest"

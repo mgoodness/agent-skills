@@ -1,6 +1,0 @@
-# pragma: allowlist nextline secret
-//registry.npmjs.org/:_authToken=${NPM_TOKEN}
-audit=false
-fund=false
-update-notifier=false
-yes=true

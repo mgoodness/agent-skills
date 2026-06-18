@@ -1,8 +1,0 @@
-[editor]
-color-modes = true
-cursor-shape = { insert = "bar" }
-file-picker = { hidden = false }
-
-[theme]
-dark = "catppuccin_frappe"
-light = "catppuccin_latte"

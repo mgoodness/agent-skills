@@ -1,7 +1,0 @@
---hidden
---max-columns=0
---max-columns-preview
---no-binary
-# https://github.com/BurntSushi/ripgrep/issues/3263
---no-require-git
---smart-case

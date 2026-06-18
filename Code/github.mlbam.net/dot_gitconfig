@@ -1,6 +1,0 @@
-[url "git@github.mlbam.net:"]
-	insteadOf = https://github.mlbam.net/
-[user]
-	email = "michael.goodness@mlb.com"
-	name = Michael Goodness
-	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAb/g0+cWz4/0BM4xr8VV/eErixEhe0D6qyHGXPBt6Hq

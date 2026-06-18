@@ -1,7 +1,0 @@
-[url "git@github.com:"]
-	insteadOf = https://github.com/
-	insteadOf = git@emu.github.com:
-[user]
-	email = "michael.goodness@mlb.com"
-	name = Michael Goodness
-	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAb/g0+cWz4/0BM4xr8VV/eErixEhe0D6qyHGXPBt6Hq

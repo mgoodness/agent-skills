@@ -1,6 +1,0 @@
-#Ref: https://codeberg.org/jsu/dotfiles/src/branch/main/ghostty/config.ghostty
-
-copy-on-select = clipboard
-focus-follows-mouse = true
-font-family = "FiraCode Nerd Font Mono"
-theme = light:catppuccin-latte.conf,dark:catppuccin-frappe.conf
