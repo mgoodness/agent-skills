@@ -25,13 +25,14 @@ If a ticket key is known, include it as a suffix in each commit subject: `[<TICK
 
 ### 3. Create the pull request
 
-After split-commits finishes, push and open the PR:
+After split-commits finishes, push and open the PR against the repo's actual default branch — don't assume it's `main`:
 
 ```sh
+gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
 gh pr create \
   --title "[<TICKET-KEY>] <summary>" \
   --body "..." \
-  --base main \
+  --base <default-branch> \
   --head <branch>
 ```
 
