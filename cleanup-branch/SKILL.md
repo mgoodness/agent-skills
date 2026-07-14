@@ -103,7 +103,30 @@ Ask: "Delete branch `<branch>`[and remove worktree at `<path>`]? (y/N)"
 
 Abort if the user declines.
 
-### 7. Remove the worktree and/or branch
+### 7. Stop any live session in the worktree first
+
+Merge status only tells you the git state is clean — not that a process has stopped touching the directory. If a worktree exists, check whether Claude is still running there before removing anything:
+
+```sh
+muxy list-panes | awk -F'\t' -v p="<path>" '$3==p{print $1}'
+```
+
+If a pane matches, read it with `muxy read-screen --pane <id>` and confirm what's actually running. A bare shell prompt means nothing's live. Claude's own UI — status bar, a pending approval prompt, a busy spinner — means it is, even if it looks idle.
+
+If it's live, ask it to exit rather than pulling the directory out from under it:
+
+```sh
+muxy send-keys --pane <id> Escape   # dismiss any pending approval prompt
+muxy send-keys --pane <id> Ctrl+C   # interrupt anything in flight
+muxy send --pane <id> "/exit"
+muxy send-keys --pane <id> Enter
+```
+
+Confirm the exit actually happened — `read-screen` should now show a bare shell prompt, not Claude's UI — before continuing to the next step. If it's still showing Claude's UI after a moment, don't force it closed: tell the user a live session is blocking cleanup and let them close it.
+
+If nothing matches (no pane, or it's already a bare shell), skip straight to the next step.
+
+### 8. Remove the worktree and/or branch
 
 **If a worktree exists** — use worktrunk, which handles removal, metadata pruning, and branch deletion in one step:
 
@@ -135,7 +158,7 @@ gh poi --state merged             # delete
 
 Use `gh poi lock <branch>` to protect any branch that should be kept.
 
-### 8. Delete remote branch
+### 9. Delete remote branch
 
 Runs for both paths — no-op if GitHub already deleted it:
 
@@ -143,7 +166,7 @@ Runs for both paths — no-op if GitHub already deleted it:
 git ls-remote --heads origin <branch> | grep -q . && git push origin --delete <branch> || true
 ```
 
-### 9. Refresh muxy (worktree path only)
+### 10. Refresh muxy (worktree path only)
 
 ```sh
 muxy refresh-worktrees <repo-path>
@@ -151,6 +174,6 @@ muxy refresh-worktrees <repo-path>
 
 Skip if no worktree existed.
 
-### 10. Confirm completion
+### 11. Confirm completion
 
-Report what was done: branch deleted, worktree removed (if applicable), muxy refreshed (if applicable).
+Report what was done: live session stopped (if one was found), branch deleted, worktree removed (if applicable), muxy refreshed (if applicable).
