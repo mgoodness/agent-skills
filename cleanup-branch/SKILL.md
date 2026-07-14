@@ -105,26 +105,27 @@ Abort if the user declines.
 
 ### 7. Stop any live session in the worktree first
 
-Merge status only tells you the git state is clean — not that a process has stopped touching the directory. If a worktree exists, check whether Claude is still running there before removing anything:
+Merge status only tells you the git state is clean — not that a process has stopped touching the directory. If a worktree exists, check whether Claude is still running there before removing anything. Resolve the worktree path to a cmux workspace, then to that workspace's terminal surface:
 
 ```sh
-muxy list-panes | awk -F'\t' -v p="<path>" '$3==p{print $1}'
+cmux workspace list --json | jq -r --arg p "<path>" '.workspaces[] | select(.current_directory==$p) | .ref'
+cmux list-pane-surfaces --workspace <workspace-ref>
 ```
 
-If a pane matches, read it with `muxy read-screen --pane <id>` and confirm what's actually running. A bare shell prompt means nothing's live. Claude's own UI — status bar, a pending approval prompt, a busy spinner — means it is, even if it looks idle.
+If a workspace matches, read its surface with `cmux read-screen --surface <surface-id>` and confirm what's actually running. A bare shell prompt means nothing's live. Claude's own UI — status bar, a pending approval prompt, a busy spinner — means it is, even if it looks idle.
 
 If it's live, ask it to exit rather than pulling the directory out from under it:
 
 ```sh
-muxy send-keys --pane <id> Escape   # dismiss any pending approval prompt
-muxy send-keys --pane <id> Ctrl+C   # interrupt anything in flight
-muxy send --pane <id> "/exit"
-muxy send-keys --pane <id> Enter
+cmux send-key --surface <surface-id> Escape   # dismiss any pending approval prompt
+cmux send-key --surface <surface-id> Ctrl+C   # interrupt anything in flight
+cmux send --surface <surface-id> "/exit"
+cmux send-key --surface <surface-id> Enter
 ```
 
 Confirm the exit actually happened — `read-screen` should now show a bare shell prompt, not Claude's UI — before continuing to the next step. If it's still showing Claude's UI after a moment, don't force it closed: tell the user a live session is blocking cleanup and let them close it.
 
-If nothing matches (no pane, or it's already a bare shell), skip straight to the next step.
+If nothing matches (no workspace, or it's already a bare shell), skip straight to the next step.
 
 ### 8. Remove the worktree and/or branch
 
@@ -166,14 +167,16 @@ Runs for both paths — no-op if GitHub already deleted it:
 git ls-remote --heads origin <branch> | grep -q . && git push origin --delete <branch> || true
 ```
 
-### 10. Refresh muxy (worktree path only)
+### 10. Close the stale cmux workspace (worktree path only)
+
+`wt remove` already deleted the directory, so the workspace resolved in step 7 (if any) now points at a path that no longer exists. cmux has no "refresh" to reconcile this — close it directly:
 
 ```sh
-muxy refresh-worktrees <repo-path>
+cmux close-workspace --workspace <workspace-ref>
 ```
 
-Skip if no worktree existed.
+Skip if no worktree existed, or step 7 found no matching workspace.
 
 ### 11. Confirm completion
 
-Report what was done: live session stopped (if one was found), branch deleted, worktree removed (if applicable), muxy refreshed (if applicable).
+Report what was done: live session stopped (if one was found), branch deleted, worktree removed (if applicable), stale cmux workspace closed (if applicable).

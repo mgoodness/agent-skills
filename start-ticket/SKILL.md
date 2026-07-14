@@ -85,8 +85,8 @@ Example: `OZZI-2225/create-abfab-projects-argocd`
 Worktrunk handles the rest automatically:
 
 - Creates a sibling worktree at `~/Code/{host}/repo.TICKET-KEY-short-slug` (ADR-0002)
-- Pre-start: runs `mise install` / `direnv allow` and symlinks `~/.config/muxy/layouts` into `.muxy/`
-- Post-start: calls `muxy refresh-worktrees` + `muxy switch-worktree` so the layout picker appears
+- Pre-start: runs `mise install` / `direnv allow`
+- Post-start: opens a focused cmux workspace at the new worktree (`cmux new-workspace --cwd <path> --name <branch>`)
 - Switches this Claude session's working directory into the new worktree
 
 The worktree is now ready. Do the work, then invoke `/shipit` to commit and open the PR.
