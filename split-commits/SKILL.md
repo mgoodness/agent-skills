@@ -1,19 +1,9 @@
 ---
 name: split-commits
-description: Analyze pending git changes, group them into clean conventional commits, propose commit messages, and optionally execute the split with careful hunk staging.
+description: Split a dirty working tree into well-scoped Conventional Commits, staged and proposed for approval before anything is committed. Use when the user wants to split or organize pending changes into commits, turn a messy working tree into clean commits, or asks for a commit plan before committing.
 ---
 
 # Split Commits
-
-Use this skill when the user wants to turn a dirty working tree into a small set of well-scoped commits, especially when they want Conventional Commits subjects and a staging plan.
-
-## Goals
-
-- Separate unrelated changes into distinct commits.
-- Keep each commit internally coherent and easy to review.
-- Use Conventional Commits subjects with sensible scopes.
-- Avoid mixing formatting-only, config-only, and behavior changes unless they clearly belong together.
-- Preserve user intent: propose the split first, then create commits only if the user asks.
 
 ## Default workflow
 
@@ -26,7 +16,7 @@ Use this skill when the user wants to turn a dirty working tree into a small set
 2. Group changes by intent, not just by directory.
    - Prefer one commit per behavior change, feature, fix, cleanup, or tooling update.
    - Split mixed files by hunk when necessary.
-3. Always propose a commit plan and wait for explicit user approval before making any changes.
+3. Propose the commit plan and wait for approval before making any changes — see **Safety rules**.
 4. Draft Conventional Commit subjects using scopes discovered from the log (step 1) and the repo structure.
    - Prefer `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`, `build`, or `ci`.
    - Add a scope when it improves clarity.
@@ -36,10 +26,7 @@ Use this skill when the user wants to turn a dirty working tree into a small set
    - commit in the agreed order
    - keep unrelated unstaged changes out of each commit
    - re-check status after each commit when needed
-6. Finish with:
-   - `git --no-pager log --oneline -n <count>` output to confirm commits look right
-   - any remaining unstaged or uncommitted files
-   - any hook or formatter behavior encountered during commit
+6. Finish by reporting per **Communication pattern** below.
 
 ## Splitting rules
 
@@ -98,7 +85,8 @@ When proposing a plan, include:
 When execution finishes, include:
 
 - commit hashes and subjects (from `git log --oneline`)
-- any skipped files
+- any hook or formatter behavior encountered during commit
+- any skipped or remaining uncommitted files
 - whether the working tree is clean
 
 ## Safety rules

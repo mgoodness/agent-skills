@@ -82,12 +82,7 @@ Invoke the `wt-switch-create` skill with the branch name:
 Branch naming convention: `<TICKET-KEY>/<kebab-case-summary>`
 Example: `OZZI-2225/create-abfab-projects-argocd`
 
-Worktrunk handles the rest automatically:
-
-- Creates a sibling worktree at `~/Code/{host}/repo.TICKET-KEY-short-slug` (ADR-0002)
-- Pre-start: runs `mise install` / `direnv allow`
-- Post-start: opens a focused cmux workspace at the new worktree (`cmux new-workspace --cwd <path> --name <branch>`)
-- Switches this Claude session's working directory into the new worktree
+Worktrunk handles the rest automatically — see the `worktrunk` skill for what the hooks do (sibling worktree placement, env prep, opening a focused cmux workspace) rather than re-deriving it here. This session's working directory switches into the new worktree.
 
 The worktree is now ready. Do the work, then invoke `/shipit` to commit and open the PR.
 

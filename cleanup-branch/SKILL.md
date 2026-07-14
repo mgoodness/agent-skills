@@ -1,6 +1,6 @@
 ---
 name: cleanup-branch
-description: Clean up a branch and its associated worktree, remote ref, and local tracking branch. Verifies merge status, pulls the default branch, then removes worktree (via wt remove) and/or branch with user confirmation. Use when user wants to clean up after a PR is merged, mentions "cleanup after merge", "delete worktree", "delete branch", or says "clean up this branch/worktree".
+description: Clean up a branch and its associated worktree, remote ref, and local tracking branch, with user confirmation. Use when the user wants to clean up after a PR is merged, or mentions "delete worktree" or "delete branch".
 ---
 
 # Cleanup Branch
