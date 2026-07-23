@@ -1,6 +1,6 @@
 ---
 name: start-ticket
-description: Create or adopt a Jira ticket, assign it, add to active sprint, mark In Progress, and create a worktree+branch via /wt-switch-create. Use when the user wants to start a ticket and branch, mentions "spin up a ticket", "create a ticket and branch", or asks to go from idea to ready-to-code. When work is done, follow up with /shipit.
+description: Create or adopt a Jira ticket, assign it, add to active sprint, mark In Progress, and stage a worktree session via /spin-up-worktrees. Use when the user wants to start a ticket and branch, mentions "spin up a ticket", "create a ticket and branch", or asks to go from idea to ready-to-code. When work is done, follow up with /shipit.
 ---
 
 # Start Ticket
@@ -71,20 +71,15 @@ These are idempotent — safe to run even if already set.
 jira issue move <TICKET-KEY> "In Progress"
 ```
 
-### 6. Create worktree + switch session
+### 6. Spin up the worktree session
 
-Invoke the `wt-switch-create` skill with the branch name:
+Invoke `/spin-up-worktrees` with the ticket key:
 
 ```
-/wt-switch-create <TICKET-KEY>/short-slug-of-title
+/spin-up-worktrees <TICKET-KEY>
 ```
 
-Branch naming convention: `<TICKET-KEY>/<kebab-case-summary>`
-Example: `OZZI-2225/create-abfab-projects-argocd`
-
-Worktrunk handles the rest automatically — see the `worktrunk` skill for what the hooks do (sibling worktree placement, env prep, opening a focused cmux workspace) rather than re-deriving it here. This session's working directory switches into the new worktree.
-
-The worktree is now ready. Do the work, then invoke `/shipit` to commit and open the PR.
+Branch naming, worktree placement, and staging `/implement` are `spin-up-worktrees`' concern — see that skill for the mechanics rather than re-deriving them here. This session stays put on the current branch; report the new workspace as staged and waiting per that skill's completion criterion. The ticket gets implemented there, followed by `/shipit` to commit and open the PR.
 
 ## CLI reference
 
@@ -96,7 +91,7 @@ The worktree is now ready. Do the work, then invoke `/shipit` to commit and open
 | Add to sprint       | `jira sprint add <sprint-id> <TICKET-KEY>`                 |
 | Transition issue    | `jira issue move <TICKET-KEY> "In Progress"`               |
 | List projects       | `jira project list --plain --columns key,name`             |
-| Create worktree     | `/wt-switch-create <branch>` (skill — wraps `wt <branch>`) |
+| Spin up worktree    | `/spin-up-worktrees <TICKET-KEY>` (skill)                  |
 
 Board ID `2093` is the configured default (Cloud Platform Sprint Board).
 
