@@ -105,27 +105,26 @@ Abort if the user declines.
 
 ### 7. Stop any live session in the worktree first
 
-Merge status only tells you the git state is clean — not that a process has stopped touching the directory. If a worktree exists, check whether Claude is still running there before removing anything. Resolve the worktree path to a cmux workspace, then to that workspace's terminal surface:
+Merge status only tells you the git state is clean — not that a process has stopped touching the directory. If a worktree exists, check whether Claude is still running there before removing anything. Resolve the worktree path to a herdr workspace, then its pane:
 
 ```sh
-cmux workspace list --json | jq -r --arg p "<path>" '.workspaces[] | select(.current_directory==$p) | .ref'
-cmux list-pane-surfaces --workspace <workspace-ref>
+herdr workspace list | jq -r --arg p "<path>" '.result.workspaces[] | select(.worktree.checkout_path==$p) | .workspace_id'
+herdr pane list --workspace <workspace-id>
 ```
 
-If a workspace matches, read its surface with `cmux read-screen --surface <surface-id>` and confirm what's actually running. A bare shell prompt means nothing's live. Claude's own UI — status bar, a pending approval prompt, a busy spinner — means it is, even if it looks idle.
+The pane entry carries an `agent` field directly — no separate screen-read needed, and no eyeballing raw text for a status bar or spinner. Presence of `"agent": "claude"` means Claude is there, regardless of `agent_status` (`working`, `idle`, `blocked`, `done` all count) — treat any of those as live. Absence of the `agent` field means it's a bare shell — nothing's live.
 
 If it's live, ask it to exit rather than pulling the directory out from under it:
 
 ```sh
-cmux send-key --surface <surface-id> Escape   # dismiss any pending approval prompt
-cmux send-key --surface <surface-id> Ctrl+C   # interrupt anything in flight
-cmux send --surface <surface-id> "/exit"
-cmux send-key --surface <surface-id> Enter
+herdr pane send-keys <pane-id> esc      # dismiss any pending approval prompt
+herdr pane send-keys <pane-id> ctrl+c   # interrupt anything in flight
+herdr pane run <pane-id> "/exit"        # types and submits atomically
 ```
 
-Confirm the exit actually happened — `read-screen` should now show a bare shell prompt, not Claude's UI — before continuing to the next step. If it's still showing Claude's UI after a moment, don't force it closed: tell the user a live session is blocking cleanup and let them close it.
+Confirm the exit actually happened — `herdr pane get <pane-id>` should no longer report an `agent` field — before continuing to the next step. If it's still reporting `agent: "claude"` after a moment, don't force it closed: tell the user a live session is blocking cleanup and let them close it.
 
-If nothing matches (no workspace, or it's already a bare shell), skip straight to the next step.
+If nothing matches (no workspace, or its pane already has no `agent` field), skip straight to the next step.
 
 ### 8. Remove the worktree and/or branch
 
@@ -135,7 +134,7 @@ If nothing matches (no workspace, or it's already a bare shell), skip straight t
 wt remove <branch>
 ```
 
-Worktrunk runs `pre-remove` hooks, moves the worktree to `.git/wt/trash/` (background), prunes git metadata, and deletes the branch if merged.
+See the `worktrunk` skill for what `wt remove` actually does (hook timing, background trash-and-prune, merge detection) rather than re-deriving it here.
 
 Fallbacks:
 
@@ -167,16 +166,18 @@ Runs for both paths — no-op if GitHub already deleted it:
 git ls-remote --heads origin <branch> | grep -q . && git push origin --delete <branch> || true
 ```
 
-### 10. Close the stale cmux workspace (worktree path only)
+### 10. Close the stale herdr workspace (worktree path only)
 
-`wt remove` already deleted the directory, so the workspace resolved in step 7 (if any) now points at a path that no longer exists. cmux has no "refresh" to reconcile this — close it directly:
+`wt remove` already deleted the directory, so the workspace resolved in step 7 (if any) now points at a path that no longer exists. herdr has no "refresh" to reconcile this on its own — close it directly:
 
 ```sh
-cmux close-workspace --workspace <workspace-ref>
+herdr workspace close <workspace-id>
 ```
+
+**Don't use `herdr worktree remove` here** — that command tries to delete the checkout itself (verified: it removes the git worktree from disk), and `wt remove` already did that in step 8. Pointing it at an already-gone path is redundant at best.
 
 Skip if no worktree existed, or step 7 found no matching workspace.
 
 ### 11. Confirm completion
 
-Report what was done: live session stopped (if one was found), branch deleted, worktree removed (if applicable), stale cmux workspace closed (if applicable).
+Report what was done: live session stopped (if one was found), branch deleted, worktree removed (if applicable), stale herdr workspace closed (if applicable).
