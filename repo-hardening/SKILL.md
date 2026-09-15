@@ -21,14 +21,6 @@ A required-check status and an "auto-merge" button are both easy to turn on and 
 
 Nothing here is language-specific. What the required CI job itself builds, tests, and lints is owned by a language skill (`go-ci` for Go), which points back here for the ruleset, Dependabot, and hardening. Cutting a versioned release from that same repo's commit history is a separate concern, owned by the `release-please` skill.
 
-## When to Activate
-
-- Configuring or auditing a repository ruleset (or migrating an old classic branch-protection rule to one) on the default branch
-- Deciding repo-level merge settings: squash-only vs. merge commits, auto-deleting merged branches
-- Bootstrapping Dependabot, or its auto-merge, for any repo
-- Enabling or auditing immutable releases on a repo that publishes GitHub Releases
-- `zizmor`, `actionlint`, or a similar Actions linter flags a workflow you wrote
-
 ## 1. The required check — naming it for step 2
 
 Whatever job gates merges (a language skill's CI workflow, e.g. `go-ci`) is what the ruleset (step 2) and auto-merge (step 5) both key off, so it must be named deliberately: the ruleset's `required_status_checks` rule matches the job on its `name:` field, not its `jobs.<id>` key. This step has no content of its own beyond that naming discipline — it exists here as the seam a language skill's CI-workflow step points at.
@@ -138,16 +130,16 @@ gh api -X PUT repos/<owner>/<repo>/immutable-releases
 
 ## Common Mistakes
 
-- **Trusting `github.actor` for a bot-identity `if:` check** — spoofable; use the event payload's `user.login` instead.
-- **Using `pull_request_target` on the workflow that also checks out PR code** — that's the exact combination the trigger is dangerous for.
-- **Minting an App token with no `permission-*` inputs** — it inherits the App's entire installation grant instead of the one job's actual needs.
-- **Naming the required-check ruleset rule after a job's id instead of its `name:`** — GitHub matches on `name:`.
-- **Wiring Dependabot auto-merge before the ruleset requires the CI check** — auto-merge then fires on PR open with nothing gating it; set up step 2 first.
+- **Trusting `github.actor` for a bot-identity `if:` check** — spoofable; see Security hardening's bot-identity bullet.
+- **Using `pull_request_target` on the workflow that also checks out PR code** — see Security hardening's `pull_request_target` bullet.
+- **Minting an App token with no `permission-*` inputs** — see Security hardening's token-scoping bullet.
+- **Naming the required-check ruleset rule after a job's id instead of its `name:`** — see step 1.
+- **Wiring Dependabot auto-merge before the ruleset requires the CI check** — see step 5's prerequisites.
 - **Leaving `strict_required_status_checks_policy` unset (or `false`)** — lets a PR merge on a check result from a now-stale base branch.
-- **Enabling `required_linear_history` without disabling `allow_merge_commit`** — the two settings disagree about what history should look like; a merge commit is still one click away in the UI.
-- **Assuming a ruleset with no `bypass_actors` still exempts admins, the way classic protection's `enforce_admins` defaulted to** — it doesn't; an empty list binds everyone, admins included, which is the flip side of forgetting to add a bypass actor you actually wanted.
+- **Enabling `required_linear_history` without disabling `allow_merge_commit`** — see step 3.
+- **Assuming a ruleset with no `bypass_actors` still exempts admins, the way classic protection's `enforce_admins` defaulted to** — see step 2's `bypass_actors` bullet; it doesn't.
 - **Running an old classic branch-protection rule and a new ruleset on the same branch indefinitely** — both apply simultaneously (most restrictive combination wins), which is confusing to reason about and to audit; migrate fully and remove the classic rule once the ruleset covers the same ground.
-- **Pinning an action to an annotated tag's own object SHA instead of the commit it points to** — resolves fine, passes review, and only zizmor's `ref-version-mismatch` audit catches that the pin and its version comment silently disagree.
-- **Building a general-purpose "auto-merge for write access" workflow alongside the Dependabot one** — auto-merging human PRs is a per-repo, per-PR decision, not a default to ship.
+- **Pinning an action to an annotated tag's own object SHA instead of the commit it points to** — see Security hardening's SHA-pinning bullet.
+- **Building a general-purpose "auto-merge for write access" workflow alongside the Dependabot one** — see step 5.
 - **Not rebasing a Dependabot PR stuck on stale CI** — merging a fix to the base branch doesn't retroactively re-run an already-open PR's checks; comment `@dependabot rebase` to make it pick up the new base and re-run.
-- **Enabling immutable releases before switching a release-please + GoReleaser pipeline to draft-first** — GitHub blocks adding assets to an already-published release outright, no "verify first" about it; the next tag push fails at the artifact-upload step. See `release-please`'s draft-mode trap and `go-ci`'s GoReleaser recipe for the fix.
+- **Enabling immutable releases before switching a release-please + GoReleaser pipeline to draft-first** — see the Immutable releases section above.

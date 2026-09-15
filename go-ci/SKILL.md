@@ -16,15 +16,6 @@ description: >
 
 This skill owns exactly what's Go-specific in a GitHub Actions release pipeline: the GoReleaser build recipe, the Go checks a required CI job runs, golangci-lint's scope, and `go.mod`/toolchain judgment calls. Everything else is language-agnostic and lives elsewhere: `release-please` owns cutting the release itself (config, loop prevention); `repo-hardening` owns the ruleset, Dependabot, auto-merge, and Actions security hardening around the required check this skill describes.
 
-## When to Activate
-
-- Bootstrapping GoReleaser for a Go repo
-- Writing or reviewing the Go-specific steps of a required-check CI job (`gofmt`, `go vet`, `go build`, `go test -race`, `go mod tidy`, `govulncheck`, `gorelease`)
-- Adding golangci-lint (or reviewing its config) in an existing Go CI workflow
-- Deciding whether a repo needs a toolchain manager (`mise`, `asdf`) alongside `go.mod`
-- Setting up release-please — see `release-please` instead
-- Configuring a ruleset, Dependabot, auto-merge, or Actions security hardening — see `repo-hardening` instead; this skill doesn't cover that ground
-
 ## GoReleaser config
 
 `go-release`'s Version Injection / Distribution Checklist sections own the build recipe (ldflags, `CGO_ENABLED=0`, `-trimpath`, checksums) — read those first. The only release-please-specific trim on top:

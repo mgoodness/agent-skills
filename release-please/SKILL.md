@@ -20,10 +20,7 @@ release-please reads Conventional Commits history and opens (then, on merge, tag
 
 ## When to Activate
 
-- Bootstrapping release-please for any repo
 - A tag-triggered release workflow (GoReleaser or otherwise) never seems to fire after release-please merges a release PR
-- Reviewing `release-please-config.json`, `.release-please-manifest.json`, or the workflow that runs `googleapis/release-please-action`
-- A repo has (or is adding) immutable releases (`repo-hardening`) and release-please's default publish-immediately behavior needs to become draft-first
 
 ## 1. Config — the component-tag trap
 
@@ -80,5 +77,5 @@ Finding that same draft release by tag, attaching every artifact, and publishing
 ## Common Mistakes
 
 - **Setting `package-name` in `release-please-config.json`** for a single-package repo — silently mismatches the tag the release workflow is watching for.
-- **Minting an App token with no `permission-*` inputs** — it inherits the App's entire installation grant instead of the one job's actual needs.
+- **Minting an App token with no `permission-*` inputs** — see `repo-hardening`'s Security hardening section.
 - **Setting `draft: true` without `force-tag-creation: true`** — GitHub defers tag creation on a draft release until it's published, so a tag-triggered downstream workflow never fires; same silent-failure shape as the component-tag trap.

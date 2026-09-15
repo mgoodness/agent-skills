@@ -1,6 +1,6 @@
 ---
 name: agent-context-branch
-description: Preserve repo-wide agent context docs (AGENTS.md, CLAUDE.md, CONTEXT.md, docs/adr, or similar design/domain docs) on a dedicated branch off the default branch, separate from feature-branch code, so they can be pulled into other worktrees. Use when the user wants to preserve or save context docs across worktrees, keep design docs out of feature-branch or default-branch commits, or sync a doc correction back onto that branch.
+description: Preserve repo-wide agent context docs (AGENTS.md, CLAUDE.md, CONTEXT.md, docs/adr, or similar design/domain docs) on a dedicated branch off the default branch, separate from feature-branch code, so they can be pulled into other worktrees. Use when the user wants to preserve context docs across worktrees, keep design docs out of feature-branch or default-branch commits, or sync a doc correction back onto that branch.
 ---
 
 # Agent Context Branch

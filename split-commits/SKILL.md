@@ -89,6 +89,10 @@ When execution finishes, include:
 - any skipped or remaining uncommitted files
 - whether the working tree is clean
 
+## Completion criterion
+
+Plan approved and every proposed commit exists, in order, each containing only its intended files or hunks. The working tree matches the plan: clean, or any remaining unstaged/skipped files called out by name in the final report. Nothing is committed before the plan is approved.
+
 ## Safety rules
 
 - Never rewrite or discard user changes without asking.
