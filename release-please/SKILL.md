@@ -3,13 +3,14 @@ name: release-please
 description: >
   Expert skill for wiring release-please, the GitHub Action that cuts versioned releases
   automatically from Conventional Commits: the component-tag trap that silently mismatches the
-  tag a downstream release workflow watches for, the loop-prevention fix (a scoped GitHub App
-  token) that lets release-please's own tag push actually trigger that workflow instead of
-  silently no-oping, and the draft/force-tag-creation pairing needed when a downstream tool must
-  finish attaching release assets before the release can publish (e.g. a repo with immutable
-  releases enabled). Use whenever setting up or reviewing `release-please-config.json`,
+  tag a downstream release workflow watches for, GitHub's loop prevention that can silently
+  swallow release-please's own tag push before that workflow ever fires, and the
+  draft/force-tag-creation pairing needed when a downstream tool must finish attaching release
+  assets before the release can publish (e.g. a repo with immutable releases enabled). Use
+  whenever setting up or reviewing `release-please-config.json`,
   `.release-please-manifest.json`, or the GitHub Actions workflow that runs release-please
-  itself, for any repo regardless of language. Defers the ruleset/Dependabot/Actions-hardening
+  itself, for any repo regardless of language. Defers the App-token mechanics that fix the
+  loop-prevention trap to the `github-app-token` skill, the ruleset/Dependabot/Actions-hardening
   wiring the release still depends on to the `repo-hardening` skill, and the resulting
   build/tag/publish recipe to a language skill (e.g. `go-ci`).
 ---
@@ -36,7 +37,7 @@ Setting `package-name` gives release-please a _component_, and `includeComponent
 
 GitHub's **loop prevention**: a push or PR authored by the default `GITHUB_TOKEN` cannot trigger further workflow runs. release-please pushes the release tag from step 1; if that push is `GITHUB_TOKEN`-authored, the downstream release workflow watching for `v*` never fires — again silently.
 
-Fix: mint a short-lived token from a GitHub App installation via `actions/create-github-app-token`, scoped down to exactly what release-please needs rather than the App's full installation grant:
+Fix: mint a short-lived token from a GitHub App installation via `actions/create-github-app-token`, scoped down to exactly what release-please needs. See the `github-app-token` skill for the mechanics — minting, scoping, reusing one App across a repo's automation — and for a second, distinct GitHub restriction (the workflow-run approval gate) that pattern also happens to clear:
 
 ```yaml
 - uses: actions/create-github-app-token@<sha> # vX.Y.Z
@@ -54,8 +55,6 @@ Fix: mint a short-lived token from a GitHub App installation via `actions/create
 The downstream release workflow does **not** need this token — it only uploads artifacts to a release the tag-authoring workflow already created, so the default `GITHUB_TOKEN` is enough there.
 
 Creating the App, and pulling its Client ID and private key into the repo's variable/secret, is one-time work only a human can click through — script it with the `wizard` skill rather than writing it as prose steps to follow by hand.
-
-For the pinning discipline on the two actions above, and for scoping this App token down with `permission-*` inputs specifically, see `repo-hardening`'s Security hardening section — that guidance is generic across every workflow in a repo, not specific to release-please.
 
 The release-please PR itself merges through the same ruleset/required-check gate as any other PR (`repo-hardening`'s steps 1–2) — nothing special to configure here beyond making sure that gate exists.
 

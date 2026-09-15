@@ -11,8 +11,9 @@ description: >
   legacy classic branch-protection rule to one), repo merge/branch settings, `dependabot.yml`,
   Dependabot auto-merge, immutable releases, or when `zizmor`/`actionlint` flags a workflow — for
   any repo, regardless of language. Defers the required check's own content (what the CI job
-  actually builds/tests/lints) to a language skill (e.g. `go-ci`), and release-please's
-  config/loop-prevention wiring to the `release-please` skill.
+  actually builds/tests/lints) to a language skill (e.g. `go-ci`), release-please's
+  config/draft-mode wiring to the `release-please` skill, and GitHub App token minting/scoping
+  mechanics to the `github-app-token` skill.
 ---
 
 # Repo Hardening: Making Required Checks and Auto-Merge Actually Bite
@@ -126,7 +127,7 @@ gh api -X PUT repos/<owner>/<repo>/immutable-releases
   ```yaml
   on: pull_request_target # zizmor: ignore[dangerous-triggers] no checkout of PR code; PR-derived values only flow through env:, never interpolated into run: scripts
   ```
-- **Scope minted App tokens down** with `permission-*` inputs; never let a job's token inherit an App's full installation grant when it only needs to push a tag and open a PR (see `release-please`'s workflow step, which mints exactly this kind of token).
+- **Scope minted App tokens down** with `permission-*` inputs; never let a job's token inherit an App's full installation grant when it only needs to push a tag and open a PR. See the `github-app-token` skill for minting mechanics, reusing one App across a repo's automation, and a workflow-run approval gate that same pattern also happens to clear.
 
 ## Common Mistakes
 
