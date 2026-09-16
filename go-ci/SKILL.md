@@ -1,15 +1,11 @@
 ---
 name: go-ci
 description: >
-  Expert skill for the Go-specific band of a GitHub Actions release pipeline: the GoReleaser
-  build recipe (ldflags, CGO_ENABLED=0, -trimpath, checksums), the Go-specific checks a required
-  CI job runs (gofmt, go vet, go build, go test -race, go mod tidy drift, govulncheck,
-  gorelease), scoping golangci-lint onto that job, and go.mod/toolchain-manager judgment calls.
-  Use whenever writing or reviewing a Go CI workflow, `.goreleaser.yaml`, or golangci-lint config.
-  Defers Go semver/API-compatibility rules to the `go-release` skill, cutting the release itself
-  to the `release-please` skill, and the ruleset/Dependabot/Actions-hardening wiring around the
-  required check to the `repo-hardening` skill; use all as needed when standing up a full
-  pipeline from scratch.
+  The Go-specific band of a GitHub Actions release pipeline: GoReleaser build recipe, Go checks
+  for a required CI job, golangci-lint scoping, and go.mod/toolchain judgment calls. Use when
+  writing or reviewing a Go CI workflow, `.goreleaser.yaml`, or golangci-lint config. Defers
+  semver rules to `go-release`, release cutting to `release-please`, and repo hardening to
+  `repo-hardening`.
 ---
 
 # Go CI: The Go-Specific Band of a Release Pipeline
@@ -65,3 +61,7 @@ Trigger this workflow on plain `pull_request` (the default read-only token) rath
 - **Adding a `mise.toml` that just re-pins what `go.mod` already pins** — redundant source of truth for a single-language repo.
 - **Setting `use_existing_draft` without release-please's paired `draft`/`force-tag-creation` config, or vice versa** — the two are one recipe; half of it alone either leaves release-please's release stuck as a permanent draft, or gives GoReleaser no draft to find, so it creates a second release for the same tag instead.
 - release-please and repo-hardening mistakes live in those skills' own Common Mistakes — check both too when reviewing a full pipeline.
+
+## Completion criterion
+
+`.goreleaser.yaml` passes `goreleaser check` and includes `changelog.disable: true` and `release.mode: keep-existing` (plus `use_existing_draft: true` if immutable releases are enabled); CI workflow runs `gofmt`, `go vet`, `go test -race`, `go mod tidy` drift check, `govulncheck`, and `gorelease`; golangci-lint config uses `linters.default: none` with an explicit enable list.
