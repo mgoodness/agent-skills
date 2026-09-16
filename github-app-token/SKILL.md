@@ -1,20 +1,11 @@
 ---
 name: github-app-token
 description: >
-  Expert skill for minting and using a GitHub App installation token in place of the default
-  `GITHUB_TOKEN`, via `actions/create-github-app-token`. Covers the two silent handicaps that
-  token carries — loop prevention (a `GITHUB_TOKEN`-authored push or PR never triggers a
-  downstream workflow) and the workflow-run approval gate (a bot-authored PR's checks can sit in
-  `action_required` waiting on a manual click even when it isn't a fork PR) — plus the mechanics
-  of minting the token, scoping it, and re-establishing a bot identity for steps that still key
-  off `github.actor`. Use whenever a workflow's push, tag, PR, comment, or merge needs to act as a
-  first-party identity instead of `github-actions[bot]`; whenever a tag-triggered or PR-triggered
-  downstream workflow silently never fires; whenever a bot-authored PR's check run is stuck
-  needing manual approval; or whenever standing up any new automation that needs to push, tag, or
-  open PRs with elevated trust. One App, reused across every workflow in a repo that needs this —
-  don't mint a new one per use case. Defers the repo-admin ruleset/Dependabot/Actions-hardening
-  wiring this token still depends on to `repo-hardening`, and release-please's own config/draft-mode
-  traps to the `release-please` skill.
+  Mint a GitHub App installation token to replace the default `GITHUB_TOKEN`. Use when a
+  workflow's push/tag/PR needs first-party identity, a downstream workflow silently never fires
+  after a bot-authored push (loop-trap), a bot PR's checks are stuck needing manual approval
+  (gate-trap), or re-establishing bot identity downstream (actor-override). Defers ruleset
+  hardening to `repo-hardening` and release-please wiring to `release-please`.
 ---
 
 # GitHub App Tokens: Escaping the Default GITHUB_TOKEN's Silent Limits
@@ -28,11 +19,11 @@ The default `GITHUB_TOKEN` carries two handicaps that don't error when they bite
 - A workflow needs to push, tag, comment, or open/merge a PR as a real, trusted identity instead of `github-actions[bot]`.
 - Standing up new automation (a bump job, a release job, anything that opens PRs on a schedule) that will need any of the above.
 
-## 1. Loop prevention
+## 1. The loop-trap
 
 A push or PR authored by the default `GITHUB_TOKEN` cannot trigger further workflow runs. If a workflow pushes a tag, or opens a PR, expecting some other `on: push`/`on: pull_request` workflow to pick it up, that second workflow simply never fires when the first push was `GITHUB_TOKEN`-authored — nothing fails, nothing logs, the run just doesn't exist.
 
-## 2. The workflow-run approval gate
+## 2. The gate-trap
 
 Separately, a `pull_request`-triggered run can land in `action_required` instead of running — GitHub's way of asking a human to click "Approve and run" before untrusted code executes. This is usually explained as a fork-PR protection, but it isn't only that: it also catches same-repo PRs opened by an identity GitHub doesn't consider a collaborator, which includes `github-actions[bot]` itself. An autobump-style workflow that pushes a branch into the same repo (no fork involved) and opens a PR under the default token can still trip this gate on its own PR.
 
@@ -55,7 +46,7 @@ Separately, a `pull_request`-triggered run can land in `action_required` instead
 - Scope every mint down with `permission-*` inputs to exactly what that job needs — never let a job's token inherit the App's full installation grant. See `repo-hardening`'s Security hardening section for this discipline, and for the commit-SHA pinning (`# vX.Y.Z` comment, dereferenced to the tag's actual commit) that applies to this action like any other.
 - Feed the minted token wherever the workflow previously passed `secrets.GITHUB_TOKEN` — as a step's `with: token:`, or as an env var a CLI (`gh`, `brew`, etc.) reads.
 
-## 4. Re-establishing identity downstream
+## 4. Actor-override
 
 Swapping the credential doesn't change what `github.actor` resolves to in the rest of the job — that context value still reflects whatever triggered the run, not the App. Any downstream step that defaults its notion of "who is committing this" to `github.actor` (a git-identity-lookup action, a changelog generator, anything that looks up a user by login) will silently commit or attribute as the wrong identity unless told otherwise. Pass the App's own login explicitly using the token-minting step's `app-slug` output:
 
@@ -79,8 +70,8 @@ Creating the App and installing it on the target repo(s) is manual dashboard wor
 
 ## Common Mistakes
 
-- **Reading `author_association` (or any other PR metadata) to predict whether a run needs manual approval** — it doesn't reliably distinguish a gated identity from an ungated one; see step 2.
-- **Minting a new GitHub App per workflow** instead of reusing one installation across a repo's automation — see step 5.
-- **Swapping the token but not the identity** — a downstream step still resolving `github.actor` will commit or attribute as the wrong bot; see step 4.
-- **Minting an App token with no `permission-*` inputs** — see `repo-hardening`'s Security hardening section.
-- **Assuming this fixes every "workflow didn't run" case** — confirm which of loop prevention (step 1) or the approval gate (step 2) is actually in play before reaching for this; they're distinct mechanisms with the same fix, not one mechanism.
+- **Verify the approval gate empirically** — `author_association` does not reliably distinguish a gated identity from an ungated one; see step 2.
+- **Reuse one App installation across every workflow in the repo** — see step 5.
+- **Pass the App's login explicitly via `app-slug`** — a downstream step still resolving `github.actor` will commit or attribute as the wrong bot; see step 4.
+- **Scope every mint with `permission-*` inputs** — see `repo-hardening`'s Security hardening section.
+- **Confirm which of the loop-trap or the gate-trap is in play before reaching for this fix** — they're distinct mechanisms with the same fix, not one mechanism.
